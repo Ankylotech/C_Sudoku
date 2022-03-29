@@ -6,10 +6,13 @@
 #define C_SUDOKU_SUDOKU_H
 
 #include <stdio.h>
+#include <math.h>
 
 #define SUDOKU_SIZE 9
 #define ROW_SIZE 3
 #define COLUMN_SIZE 3
+
+
 
 typedef struct Sudoku_ {
     int board[SUDOKU_SIZE][SUDOKU_SIZE];

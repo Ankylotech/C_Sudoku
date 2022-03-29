@@ -1,18 +1,27 @@
 //
 // Created by ankylotech on 29.03.22.
 //
+#include <stdlib.h>
 #include "sudoku.h"
 
+void print_binary(unsigned int number)
+{
+    if (number >> 1) {
+        print_binary(number >> 1);
+    }
+    putc((number & 1) ? '1' : '0', stdout);
+}
+
 int set_bit(int num, int bit){
-    return (num | (1<<bit));
+    return (num | (1<<(bit-1)));
 }
 
 int unset_bit(int num, int bit){
-    return (num & (~(1<<bit)));
+    return (num & (~(1<<(bit-1))));
 }
 
 int bit(int num, int bit){
-    return (num >> bit) & 1;
+    return (num >> (bit-1)) & 1;
 }
 
 void copy_sudoku(sudoku* s1,sudoku* s2){
@@ -25,12 +34,11 @@ void copy_sudoku(sudoku* s1,sudoku* s2){
 }
 
 void initialize(sudoku* s, int board[SUDOKU_SIZE][SUDOKU_SIZE]){
+    int val = pow(2,SUDOKU_SIZE)-1;;
     for(int row = 0; row < SUDOKU_SIZE; row++){
         for(int column = 0; column < SUDOKU_SIZE; column++){
-            for(int i = 1; i <= SUDOKU_SIZE; i++){
-                s->possible[row][column] = set_bit(s->possible[row][column],i);
-            }
-
+            s->possible[row][column] = val;
+            s->board[row][column] = 0;
         }
     }
     for(int row = 0; row < SUDOKU_SIZE; row++){
@@ -40,12 +48,24 @@ void initialize(sudoku* s, int board[SUDOKU_SIZE][SUDOKU_SIZE]){
     }
 }
 
-int num_bits(int n){
+int bit_num(int n){
     int tot = 0;
     for(int i = 1; i <= SUDOKU_SIZE; i++){
         if(bit(n,i)) tot++;
     }
     return tot;
+}
+
+
+int one_bit(int n){
+    int tot = 0;
+    for(int i = 1; i <= SUDOKU_SIZE; i++){
+        if(bit(n,i)) {
+            if(tot) return 0;
+            tot++;
+        }
+    }
+    return 1;
 }
 
 int first_bit(int n){
@@ -70,17 +90,20 @@ int place_number(sudoku* s, int number, int row, int column){
             s->possible[i][j] = unset_bit(s->possible[i][j],number);
         }
     }
+
+    s->possible[row][column] = set_bit(0,number);
+
     for(int i = 0; i < SUDOKU_SIZE; i++){
-        if(s->board[i][column] == 0 && num_bits(s->possible[i][column]) == 1){
+        if(s->board[i][column] == 0 && one_bit(s->possible[i][column]) == 1){
             place_number(s, first_bit(s->possible[i][column]),i,column);
         }
-        if(s->board[row][i] == 0 && num_bits(s->possible[row][i]) == 1){
+        if(s->board[row][i] == 0 && one_bit(s->possible[row][i]) == 1){
             place_number(s, first_bit(s->possible[row][i]),row,i);
         }
     }
     for(int i = rowBox; i < rowBox + ROW_SIZE; i++){
         for(int j = columnBox; j < columnBox + COLUMN_SIZE; j++){
-            if(s->board[i][j] == 0 && num_bits(s->possible[i][j]) == 1){
+            if(s->board[i][j] == 0 && one_bit(s->possible[i][j])){
                 place_number(s, first_bit(s->possible[i][j]),i,j);
             }
         }
@@ -89,7 +112,29 @@ int place_number(sudoku* s, int number, int row, int column){
     return 1;
 }
 
-int solve_board(sudoku* sudo){
+int possible(sudoku s, int row, int column){
+    int val = (int)pow(2,SUDOKU_SIZE)-1;
+    int rows = 0;
+    int cols = 0;
+    int boxes = 0;
+    for(int j = 0; j < SUDOKU_SIZE; j++) {
+        rows |= s.possible[row][j];
+        cols |= s.possible[j][column];
+    }
+    int rowBox = row - row%ROW_SIZE;
+    int columnBox = column - column%COLUMN_SIZE;
+    for(int i = rowBox; i < rowBox + ROW_SIZE; i++){
+        for(int j = columnBox; j < columnBox + COLUMN_SIZE; j++){
+            boxes |= s.possible[i][j];
+        }
+    }
+    if(rows != val || cols != val || boxes != val) {
+        return 0;
+    }
+    return 1;
+}
+
+int branch_bound(sudoku* sudo){
     sudoku s;
     copy_sudoku(&s, sudo);
     for(int i = 0; i < SUDOKU_SIZE; i++){
@@ -97,6 +142,11 @@ int solve_board(sudoku* sudo){
             if(s.board[i][j] == 0){
                 for(int numberToTry = 1; numberToTry <= SUDOKU_SIZE; numberToTry++){
                     if(bit(s.possible[i][j],numberToTry)){
+                        s.possible[i][j] = unset_bit(s.possible[i][j],numberToTry);
+                        if(!possible(s,i,j) || s.possible[i][j] == 0) {
+                            place_number(&s,numberToTry,i,j);
+                            break;
+                        }
                         place_number(&s,numberToTry,i,j);
                         if(solve_board(&s)){
                             copy_sudoku(sudo, &s);
@@ -105,13 +155,101 @@ int solve_board(sudoku* sudo){
                             copy_sudoku(&s, sudo);
                         }
                     }
+                    if(numberToTry == SUDOKU_SIZE) return 0;
                 }
-                return 0;
             }
         }
     }
-    copy_sudoku(sudo, &s);
     return 1;
+}
+
+void logic(sudoku* sudo){
+    /*char* rowtests = calloc(SUDOKU_SIZE,1);
+    char* coltests = calloc(SUDOKU_SIZE,1);
+    char* boxtests = calloc(SUDOKU_SIZE,1);
+    for(int i = 0; i < SUDOKU_SIZE; i++) {
+        for (int j = 0; j < SUDOKU_SIZE; j++) {
+            int x1 = (i%3)*3 + j%3;
+            int y1 = (i/3)*3 K+ j/3;
+            for (int k = j; k < SUDOKU_SIZE; k++) {
+                if (sudo->possible[i][j] == sudo->possible[i][k]) {
+                    rowtests[j]++;
+                    rowtests[k]++;
+                }
+                if (sudo->possible[j][i] == sudo->possible[k][i]) {
+                    coltests[j]++;
+                    coltests[k]++;
+                }
+                int x2 = (i%3)*3 + k%3;
+                int y2 = (i/3)*3 + k/3;
+                if (sudo->possible[x1][y1] == sudo->possible[x2][y2]) {
+                    boxtests[j]++;
+                    boxtests[k]++;
+                }
+            }
+        }
+
+        for(int l = 0; l < SUDOKU_SIZE; l++){
+            int k = sudo->possible[i][l];
+            int num = bit_num(k);
+            if(rowtests[l] == num){
+                for(int j = 0; j < SUDOKU_SIZE; j++){
+                    if(sudo->possible[i][j] != k) {
+                        sudo->possible[i][j] &= (~k);
+                    }
+                }
+            }
+            k = sudo->possible[l][i];
+            num = bit_num(k);
+            if(coltests[l] == num){
+                for(int j = 0; j < SUDOKU_SIZE; j++){
+                    if(sudo->possible[j][i] != k) sudo->possible[j][i] &= (~k);
+                }
+            }
+            int x1 = (i%3)*3 + l%3;
+            int y1 = (i/3)*3 + l/3;
+            k = sudo->possible[x1][y1];
+            num = bit_num(k);
+            if(coltests[l] == num){
+                for(int j = 0; j < SUDOKU_SIZE; j++){
+                    int x2 = (i%3)*3 + j%3;
+                    int y2 = (i/3)*3 + j/3;
+                    if(sudo->possible[x2][y2] != k) sudo->possible[x2][y2] &= (~k);
+                }
+            }
+            rowtests[l] = 0;
+            coltests[l] = 0;
+            boxtests[l] = 0;
+
+        }
+    }
+    free(rowtests);
+    free(coltests);
+    free(boxtests);
+     */
+    for(int i = 0; i < SUDOKU_SIZE; i++) {
+        for (int j = 0; j < SUDOKU_SIZE; j++) {
+            if (sudo->board[i][j] == 0) {
+                for (int numberToTry = 1; numberToTry <= SUDOKU_SIZE; numberToTry++) {
+                    if (bit(sudo->possible[i][j], numberToTry)) {
+                        sudo->possible[i][j] = unset_bit(sudo->possible[i][j], numberToTry);
+                        if (!possible(*sudo, i, j) || sudo->possible[i][j] == 0) {
+                            place_number(sudo, numberToTry, i, j);
+                            i = 0;
+                            j = -1;
+                            break;
+                        }
+                        sudo->possible[i][j] = set_bit(sudo->possible[i][j], numberToTry);
+                    }
+                }
+            }
+        }
+    }
+}
+
+int solve_board(sudoku* sudo){
+    logic(sudo);
+    return branch_bound(sudo);
 }
 
 

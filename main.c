@@ -11,6 +11,7 @@ float timedifference_msec(struct timeval t0, struct timeval t1)
 int main(){
     struct timeval t0;
     struct timeval t1;
+    int repetitions = 1000;
     float elapsed;
     int board[SUDOKU_SIZE][SUDOKU_SIZE]= {
             {0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -25,15 +26,18 @@ int main(){
     };
     sudoku s;
     output_matrix(board);
+
     gettimeofday(&t0,0);
-    initialize(&s,board);
-    solve_board(&s);
+    for(int i = 0; i < repetitions; i++){
+        initialize(&s,board);
+        solve_board(&s);
+    }
     gettimeofday(&t1,0);
 
     elapsed = timedifference_msec(t0, t1);
 
     printf("\nsolved:\n\n");
     output_matrix(s.board);
-    printf("solved in %fms", elapsed);
+    printf("solved %d in %fms", repetitions, elapsed);
     return 0;
 }
