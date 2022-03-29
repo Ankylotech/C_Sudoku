@@ -9,7 +9,6 @@ float timedifference_msec(struct timeval t0, struct timeval t1)
 }
 #include "sudoku.h"
 int main(){
-    FILE* input = fopen("./input.txt","r");
     struct timeval t0;
     struct timeval t1;
     float elapsed;
@@ -24,14 +23,6 @@ int main(){
             {0, 0, 2, 0, 0, 8, 7, 1, 0},
             {0, 0, 0, 0, 0, 0, 0, 0, 0}
     };
-    if(input != NULL){
-        for(int i = 0; i < SUDOKU_SIZE; i++){
-            for(int j = 0; j < SUDOKU_SIZE; j++){
-                board[i][j] = fgetc(input) - '0';
-            }
-            fgetc(input);
-        }
-    }
     sudoku s;
     output_matrix(board);
     gettimeofday(&t0,0);
