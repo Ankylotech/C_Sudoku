@@ -11,7 +11,7 @@ float timedifference_msec(struct timeval t0, struct timeval t1)
 int main(){
     struct timeval t0;
     struct timeval t1;
-    int repetitions = 1000;
+    int repetitions = 1;
     float elapsed;
     int board[SUDOKU_SIZE][SUDOKU_SIZE]= {
             {0, 0, 0, 0, 0, 0, 0, 0, 0},
