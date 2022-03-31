@@ -7,4 +7,4 @@ include_directories(.)
 
 add_executable(C_Sudoku
         main.c
-        sudoku.c sudoku.h)
+        sudoku.c sudoku.h io.c io.h)

@@ -12,8 +12,6 @@
 #define ROW_SIZE 3
 #define COLUMN_SIZE 3
 
-
-
 typedef struct Sudoku_ {
     int board[SUDOKU_SIZE][SUDOKU_SIZE];
     int possible[SUDOKU_SIZE][SUDOKU_SIZE]
@@ -26,6 +24,8 @@ int unset_bit(int num, int bit);
 int bit(int num, int bit);
 
 void initialize(sudoku* s, int board[SUDOKU_SIZE][SUDOKU_SIZE]);
+
+void clear(sudoku* s);
 
 int place_number(sudoku* s, int number, int row, int column);
 

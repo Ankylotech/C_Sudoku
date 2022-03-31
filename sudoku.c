@@ -34,16 +34,20 @@ void copy_sudoku(sudoku* s1,sudoku* s2){
 }
 
 void initialize(sudoku* s, int board[SUDOKU_SIZE][SUDOKU_SIZE]){
+    clear(s);
+    for(int row = 0; row < SUDOKU_SIZE; row++){
+        for(int column = 0; column < SUDOKU_SIZE; column++){
+            place_number(s,board[row][column],row,column);
+        }
+    }
+}
+
+void clear(sudoku* s){
     int val = pow(2,SUDOKU_SIZE)-1;;
     for(int row = 0; row < SUDOKU_SIZE; row++){
         for(int column = 0; column < SUDOKU_SIZE; column++){
             s->possible[row][column] = val;
             s->board[row][column] = 0;
-        }
-    }
-    for(int row = 0; row < SUDOKU_SIZE; row++){
-        for(int column = 0; column < SUDOKU_SIZE; column++){
-            place_number(s,board[row][column],row,column);
         }
     }
 }
