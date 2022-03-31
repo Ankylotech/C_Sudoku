@@ -117,6 +117,26 @@ void naked_singles(sudoku* s, int row, int column){
     }
 }
 
+int hidden_singles(sudoku* sudo){
+    for(int i = 0; i < SUDOKU_SIZE; i++) {
+        for (int j = 0; j < SUDOKU_SIZE; j++) {
+            if (sudo->board[i][j] == 0) {
+                for (int numberToTry = 1; numberToTry <= SUDOKU_SIZE; numberToTry++) {
+                    if (bit(sudo->possible[i][j], numberToTry)) {
+                        sudo->possible[i][j] = unset_bit(sudo->possible[i][j], numberToTry);
+                        if (!possible(*sudo, i, j) || sudo->possible[i][j] == 0) {
+                            place_number(sudo, numberToTry, i, j);
+                            break;
+                        }
+                        sudo->possible[i][j] = set_bit(sudo->possible[i][j], numberToTry);
+                    }
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 int place_number(sudoku* s, int number, int row, int column){
     s->board[row][column] = number;
     if(number == 0) return 1;
@@ -247,28 +267,10 @@ int naked_nums(sudoku* sudo){
     return 1;
 }
 
-int hidden_singles(sudoku* sudo){
-    for(int i = 0; i < SUDOKU_SIZE; i++) {
-        for (int j = 0; j < SUDOKU_SIZE; j++) {
-            if (sudo->board[i][j] == 0) {
-                for (int numberToTry = 1; numberToTry <= SUDOKU_SIZE; numberToTry++) {
-                    if (bit(sudo->possible[i][j], numberToTry)) {
-                        sudo->possible[i][j] = unset_bit(sudo->possible[i][j], numberToTry);
-                        if (!possible(*sudo, i, j) || sudo->possible[i][j] == 0) {
-                            place_number(sudo, numberToTry, i, j);
-                            break;
-                        }
-                        sudo->possible[i][j] = set_bit(sudo->possible[i][j], numberToTry);
-                    }
-                }
-            }
-        }
-    }
-    return 1;
-}
-
 int logic(sudoku* sudo){
-    return naked_nums(sudo) && hidden_singles(sudo);
+    return hidden_singles(sudo)
+        && naked_nums(sudo)
+        ;
 }
 
 int solve_board(sudoku* sudo){
