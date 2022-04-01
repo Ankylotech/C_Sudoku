@@ -18,8 +18,8 @@ int readNumberLine(FILE* f){
 int readSingleNumber(FILE* f){
     int num = 0;
     int c;
-    while((c = fgetc(f)) < '0' || c > '9');
-    num*= 10;
-    num += c - '0';
+    while(((c = fgetc(f)) < '0' || c > '9') && c != '.');
+    if(c >= '0' && c <= '9')num = c-'0';
+    else num = 0;
     return num;
 }

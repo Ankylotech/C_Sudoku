@@ -27,11 +27,23 @@ void initialize(sudoku* s, int board[SUDOKU_SIZE][SUDOKU_SIZE]);
 
 void clear(sudoku* s);
 
+int finishBoard(sudoku* s);
+
 int place_number(sudoku* s, int number, int row, int column);
+
+int place_number_logicless(sudoku* s, int number, int row, int column);
+
+int logic_all(sudoku* sudo);
 
 int solve_board(sudoku* s);
 
+int solve_board_old(sudoku* sudo);
+
+int solve_board_pure(sudoku* sudo);
+
 void output_matrix(int s[SUDOKU_SIZE][SUDOKU_SIZE]);
+
+void output_binary_matrix(int s[SUDOKU_SIZE][SUDOKU_SIZE]);
 
 void copy_sudoku(sudoku* s1,sudoku* s2);
 
