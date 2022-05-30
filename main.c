@@ -10,10 +10,10 @@ float timedifference_msec(struct timeval t0, struct timeval t1)
 int main(){
     struct timeval t0;
     struct timeval t1;
-    FILE* file = fopen("C:/Users/Ankylotech/CLionProjects/C_Sudoku/puzzles/allpuzzles.txt","r");
+    FILE* file = fopen("C:/Users/Ankylotech/CLionProjects/C_Sudoku/puzzles/easy50.txt","r");
     int repetitions = 100;
     float elapsed = 0;
-    int board[SUDOKU_SIZE][SUDOKU_SIZE]= {
+    int board[SUDOKU_SIZE*SUDOKU_SIZE][SUDOKU_SIZE*SUDOKU_SIZE]= {
             {0, 0, 0, 0, 0, 0, 0, 0, 0},
             {0, 0, 1, 0, 0, 9, 5, 3, 0},
             {8, 0, 9, 0, 7, 6, 0, 0, 0},
@@ -36,16 +36,16 @@ int main(){
     int minI = 0;
     for(int i = 0; i < repetitions; i++) {
         if (file != NULL) {
-            for (int x = 0; x < SUDOKU_SIZE; x++) {
-                for (int y = 0; y < SUDOKU_SIZE; y++) {
+            for (int x = 0; x < SUDOKU_SIZE*SUDOKU_SIZE; x++) {
+                for (int y = 0; y < SUDOKU_SIZE*SUDOKU_SIZE; y++) {
                     board[x][y] = readSingleNumber(file);
                 }
             }
         }
         printf("board %d:\n",(i+1));
-        output_matrix(board);
         gettimeofday(&t0,0);
         initialize(&s,board);
+        output_matrix(s.possible);
         if(!solve_board(&s)){
             printf("impossible\n");
             output_binary_matrix(s.possible);
@@ -56,7 +56,7 @@ int main(){
             solveTotal++;
             printf("solved:\n");
         }else printf("failed\n");
-        output_matrix(s.board);
+        output_matrix(s.possible);
         float d = timedifference_msec(t0, t1);
         if(d > max) {
             max = d;
