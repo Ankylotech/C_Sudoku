@@ -8,10 +8,12 @@
 #include <stdio.h>
 #include <math.h>
 
-#define SUDOKU_SIZE 3
+
+#define SUDOKU_N 3
+#define SUDOKU_SIZE SUDOKU_N * SUDOKU_N
 
 typedef struct Sudoku_ {
-    int possible[SUDOKU_SIZE*SUDOKU_SIZE][SUDOKU_SIZE*SUDOKU_SIZE]
+    int possible[SUDOKU_SIZE][SUDOKU_SIZE]
 } sudoku;
 
 int set_bit(int num, int bit);
@@ -20,7 +22,7 @@ int unset_bit(int num, int bit);
 
 int bit(int num, int bit);
 
-void initialize(sudoku* s, int board[SUDOKU_SIZE*SUDOKU_SIZE][SUDOKU_SIZE*SUDOKU_SIZE]);
+void initialize(sudoku* s, int board[SUDOKU_SIZE][SUDOKU_SIZE]);
 
 void clear(sudoku* s);
 
@@ -32,9 +34,9 @@ int logic(sudoku* sudo);
 
 int solve_board(sudoku* s);
 
-void output_matrix(int s[SUDOKU_SIZE*SUDOKU_SIZE][SUDOKU_SIZE*SUDOKU_SIZE]);
+void output_matrix(int s[SUDOKU_SIZE][SUDOKU_SIZE]);
 
-void output_binary_matrix(int s[SUDOKU_SIZE*SUDOKU_SIZE][SUDOKU_SIZE*SUDOKU_SIZE]);
+void output_binary_matrix(int s[SUDOKU_SIZE][SUDOKU_SIZE]);
 
 void copy_sudoku(sudoku* s1,sudoku* s2);
 
