@@ -123,10 +123,14 @@ int naked_numbers_spec(sudoku* sudoku1, int row, int col){
     int colOccurrences = 0;
     int boxOccurrences = 0;
 
+    int rowChanges = 0;
+    int colChanges = 0;
+    int boxChanges = 0;
+
     int value = sudoku1->possible[row][col];
     int count = bit_num(value);
 
-    if(count < SUDOKU_SIZE && count > 0 && count <= 1 ){
+    if(count < SUDOKU_SIZE && count > 0 ){
         int boxX = (row/SUDOKU_N)*SUDOKU_N;
         int boxY = (col/SUDOKU_N)*SUDOKU_N;
 
@@ -157,10 +161,19 @@ int naked_numbers_spec(sudoku* sudoku1, int row, int col){
                 sudoku1->possible[x][y] &= ~value;
             }
 
-            if(rowValue != sudoku1->possible[row][i] && (sudoku1->possible[row][i] == 0 || !naked_numbers_spec(sudoku1, row, i))) return 0;
-            if(colValue != sudoku1->possible[i][col] && (sudoku1->possible[i][col] == 0 || !naked_numbers_spec(sudoku1, i, col))) return 0;
-            if(boxValue != sudoku1->possible[x][y] && (sudoku1->possible[x][y] == 0 || !naked_numbers_spec(sudoku1, x, y))) return 0;
+            if(rowValue != sudoku1->possible[row][i]) rowChanges = set_bit(rowChanges,i+1);
+            if(colValue != sudoku1->possible[i][col]) colChanges = set_bit(colChanges,i+1);
+            if(boxValue != sudoku1->possible[x][y])   boxChanges = set_bit(boxChanges,i+1);
         }
+
+        for(int i = 0; i < SUDOKU_SIZE; i++) {
+            int x = boxX + i%SUDOKU_N;
+            int y = boxY + i/SUDOKU_N;
+            if(bit(rowChanges,i+1) && (sudoku1->possible[row][i] == 0 || !naked_numbers_spec(sudoku1, row, i))) return 0;
+            if(bit(colChanges,i+1) && (sudoku1->possible[i][col] == 0 || !naked_numbers_spec(sudoku1, i, col))) return 0;
+            if(bit(boxChanges,i+1) && (sudoku1->possible[x][y] == 0 || !naked_numbers_spec(sudoku1, x, y))) return 0;
+        }
+
     }
     return 1;
 }
