@@ -78,76 +78,88 @@ int first_bit(int n){
 
 int finishBoard(sudoku* s){
     int ret = 1;
+    int count[SUDOKU_SIZE];
+
+    for(int i = 0; i < SUDOKU_SIZE; i++){
+        count[i] = 0;
+    }
+
 
     for(int i = 0; i < SUDOKU_SIZE; i++){
         for(int j = 0; j < SUDOKU_SIZE; j++){
             int num = bit_num(s->possible[i][j]);
             if(num != 1) ret = 0;
+            count[first_bit(s->possible[i][j])-1]++;
         }
+    }
+    for(int i = 0; i < SUDOKU_SIZE; i++){
+        printf("%d\n",count[i]);
+        if(count[i] != SUDOKU_SIZE) return 0;
     }
     return ret;
 }
 
+void count_occurrence(sudoku* sudoku1, int row, int col, int value, int* row_count, int* col_count, int* box_count){
+    int boxX = (row/SUDOKU_N)*SUDOKU_N;
+    int boxY = (col/SUDOKU_N)*SUDOKU_N;
+
+    for(int i = 0; i < SUDOKU_SIZE ; i++){
+        int r = sudoku1->possible[row][i];
+        int c = sudoku1->possible[i][col];
+
+        int x = i%SUDOKU_N;
+        int y = i/SUDOKU_N;
+
+        int b = sudoku1->possible[boxX+x][boxY+y];
+
+        if(r == value) (*row_count)++;
+        if(c == value) (*col_count)++;
+        if(b == value) (*box_count)++;
+    }
+}
+
 int naked_numbers_spec(sudoku* sudoku1, int row, int col){
-    int rows = 0;
-    int cols = 0;
-    int boxs = 0;
+    int rowOccurrences = 0;
+    int colOccurrences = 0;
+    int boxOccurrences = 0;
 
     int value = sudoku1->possible[row][col];
     int count = bit_num(value);
-    if(count < SUDOKU_SIZE && count > 1 ){
+
+    if(count < SUDOKU_SIZE && count > 0 && count <= 1 ){
         int boxX = (row/SUDOKU_N)*SUDOKU_N;
         int boxY = (col/SUDOKU_N)*SUDOKU_N;
 
-        for(int i = 0; i < SUDOKU_SIZE ; i++){
-            int r = sudoku1->possible[row][i];
-            int c = sudoku1->possible[i][col];
+        count_occurrence(sudoku1, row, col, value, &rowOccurrences, &colOccurrences, &boxOccurrences);
 
-            int x = i%SUDOKU_N;
-            int y = i/SUDOKU_N;
-
-            int b = sudoku1->possible[boxX+x][boxY+y];
-
-            if(r == value) rows++;
-            if(c == value) cols++;
-            if(b == value) boxs++;
-        }
-
-        if(rows < 1) return 0;
-        if(cols < 1) return 0;
-        if(boxs < 1) return 0;
-
-        if(count == 1){
-            rows = 1;
-            cols = 1;
-            boxs = 1;
-        }
-
+        if(rowOccurrences < 1 || rowOccurrences > count) return 0;
+        if(colOccurrences < 1 || colOccurrences > count) return 0;
+        if(boxOccurrences < 1 || boxOccurrences > count) return 0;
 
         for(int i = 0; i < SUDOKU_SIZE; i++) {
-            int r = sudoku1->possible[row][i];
-            int c = sudoku1->possible[i][col];
+            int rowValue = sudoku1->possible[row][i];
+            int colValue = sudoku1->possible[i][col];
 
-            int x = i%SUDOKU_N;
-            int y = i/SUDOKU_N;
+            int x = boxX + i%SUDOKU_N;
+            int y = boxY + i/SUDOKU_N;
 
-            int b = sudoku1->possible[boxX+x][boxY+y];
+            int boxValue = sudoku1->possible[x][y];
 
-            if(rows == count && r != value){
+            if(rowOccurrences == count && rowValue != value){
                 sudoku1->possible[row][i] &= ~value;
             }
 
-            if(cols == count && c != value){
+            if(colOccurrences == count && colValue != value){
                 sudoku1->possible[i][col] &= ~value;
             }
 
-            if(boxs == count && b != value){
-                sudoku1->possible[boxX+x][boxY+y] &= ~value;
+            if(boxOccurrences == count && boxValue != value){
+                sudoku1->possible[x][y] &= ~value;
             }
 
-            if(sudoku1->possible[row][i] == 0 || (r != sudoku1->possible[row][i] && !naked_numbers_spec(sudoku1, row, i))) return 0;
-            if(sudoku1->possible[i][col] == 0 || (c != sudoku1->possible[i][col] && !naked_numbers_spec(sudoku1, i, col))) return 0;
-            if(sudoku1->possible[boxX+x][boxY+y] == 0 || (b != sudoku1->possible[boxX+x][boxY+y] && !naked_numbers_spec(sudoku1,boxX+x,boxY+y))) return 0;
+            if(rowValue != sudoku1->possible[row][i] && (sudoku1->possible[row][i] == 0 || !naked_numbers_spec(sudoku1, row, i))) return 0;
+            if(colValue != sudoku1->possible[i][col] && (sudoku1->possible[i][col] == 0 || !naked_numbers_spec(sudoku1, i, col))) return 0;
+            if(boxValue != sudoku1->possible[x][y] && (sudoku1->possible[x][y] == 0 || !naked_numbers_spec(sudoku1, x, y))) return 0;
         }
     }
     return 1;
@@ -175,7 +187,6 @@ int logic(sudoku* s) {
 }
 
 int branch_bound(sudoku* sudoku1){
-    //logic(sudoku1);
     int x = -1,y = -1;
     int min = SUDOKU_SIZE+1;
     int ret = 1;
@@ -194,11 +205,11 @@ int branch_bound(sudoku* sudoku1){
     }
 
     if(x != -1){
+        sudoku copy;
         for(int poss = 1; poss <= SUDOKU_SIZE; poss++){
-            sudoku copy;
             copy_sudoku(&copy,sudoku1);
             if(bit(copy.possible[x][y],poss)){
-                if(place_number(&copy,poss,x,y) && branch_bound(&copy)) {
+                if(place_number(&copy,poss,x,y) != 0 && branch_bound(&copy)) {
                     copy_sudoku(sudoku1,&copy);
                     return 1;
                 }
@@ -232,6 +243,18 @@ void output_binary_matrix(int s[SUDOKU_SIZE][SUDOKU_SIZE]){
             if(j%SUDOKU_N == 0 && j != 0) printf("|");
             print_binary(s[i][j]);
             printf(".");
+        }
+        printf("\n");
+    }
+}
+
+void output_board(int s[SUDOKU_SIZE][SUDOKU_SIZE]){
+    for(int i = 0; i < SUDOKU_SIZE; i++){
+        if(i%SUDOKU_N == 0 && i != 0) printf("----------\n");
+        for(int j = 0; j < SUDOKU_SIZE; j++){
+            if(j%SUDOKU_N == 0 && j != 0) printf("|");
+            printf("%d", s[i][j]);
+
         }
         printf("\n");
     }

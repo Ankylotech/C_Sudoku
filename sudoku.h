@@ -40,4 +40,6 @@ void output_binary_matrix(int s[SUDOKU_SIZE][SUDOKU_SIZE]);
 
 void copy_sudoku(sudoku* s1,sudoku* s2);
 
+void output_board(int s[SUDOKU_SIZE][SUDOKU_SIZE]);
+
 #endif //C_SUDOKU_SUDOKU_H

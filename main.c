@@ -44,21 +44,21 @@ int main(){
                 }
             }
         }
-        //printf("board %d:\n",(i+1));
+        printf("board %d:\n",(i+1));
+        output_board(board);
         gettimeofday(&t0,0);
         initialize(&s,board);
-        //output_matrix(s.possible);
         if(!solve_board(&s)){
             output_binary_matrix(s.possible);
             printf("impossible\n");
         }
-
         gettimeofday(&t1,0);
         if(finishBoard(&s)) {
             solveTotal++;
-            //printf("solved:\n");
+            printf("solved:\n");
         }else printf("failed\n");
-        //output_matrix(s.possible);
+        output_binary_matrix(s.possible);
+        output_matrix(s.possible);
         float d = timedifference_msec(t0, t1);
         if(d > max) {
             max = d;
