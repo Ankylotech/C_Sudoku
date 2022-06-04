@@ -12,7 +12,7 @@ int main(){
     struct timeval t0;
     struct timeval t1;
     FILE* file = NULL;
-    file = fopen("C:/Users/Ankylotech/CLionProjects/C_Sudoku/puzzles/allpuzzles.txt","r");
+    file = fopen("./puzzles/allpuzzles.txt","r");
     int repetitions = 1;
     float elapsed = 0;
     int board[SUDOKU_SIZE][SUDOKU_SIZE]= {

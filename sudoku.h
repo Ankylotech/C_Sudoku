@@ -32,6 +32,8 @@ int place_number(sudoku* s, int number, int row, int column);
 
 int logic(sudoku* sudo);
 
+int logic_spec(sudoku* sudoku1, int row, int col);
+
 int solve_board(sudoku* s);
 
 void output_matrix(int s[SUDOKU_SIZE][SUDOKU_SIZE]);

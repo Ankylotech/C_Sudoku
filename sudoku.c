@@ -99,6 +99,10 @@ int finishBoard(sudoku* s){
     return ret;
 }
 
+int contains(int a, int b){
+    return (a & b) == b;
+}
+
 void count_occurrence(sudoku* sudoku1, int row, int col, int value, int* row_count, int* col_count, int* box_count){
     int boxX = (row/SUDOKU_N)*SUDOKU_N;
     int boxY = (col/SUDOKU_N)*SUDOKU_N;
@@ -115,6 +119,25 @@ void count_occurrence(sudoku* sudoku1, int row, int col, int value, int* row_cou
         if(r == value) (*row_count)++;
         if(c == value) (*col_count)++;
         if(b == value) (*box_count)++;
+    }
+}
+
+void count_containing(sudoku* sudoku1, int row, int col, int value, int* row_count, int* col_count, int* box_count){
+    int boxX = (row/SUDOKU_N)*SUDOKU_N;
+    int boxY = (col/SUDOKU_N)*SUDOKU_N;
+
+    for(int i = 0; i < SUDOKU_SIZE ; i++){
+        int r = sudoku1->possible[row][i];
+        int c = sudoku1->possible[i][col];
+
+        int x = i%SUDOKU_N;
+        int y = i/SUDOKU_N;
+
+        int b = sudoku1->possible[boxX+x][boxY+y];
+
+        if(contains(r, value)) (*row_count)++;
+        if(contains(c, value)) (*col_count)++;
+        if(contains(b, value)) (*box_count)++;
     }
 }
 
@@ -169,9 +192,9 @@ int naked_numbers_spec(sudoku* sudoku1, int row, int col){
         for(int i = 0; i < SUDOKU_SIZE; i++) {
             int x = boxX + i%SUDOKU_N;
             int y = boxY + i/SUDOKU_N;
-            if(bit(rowChanges,i+1) && (sudoku1->possible[row][i] == 0 || !naked_numbers_spec(sudoku1, row, i))) return 0;
-            if(bit(colChanges,i+1) && (sudoku1->possible[i][col] == 0 || !naked_numbers_spec(sudoku1, i, col))) return 0;
-            if(bit(boxChanges,i+1) && (sudoku1->possible[x][y] == 0 || !naked_numbers_spec(sudoku1, x, y))) return 0;
+            if(bit(rowChanges,i+1) && (sudoku1->possible[row][i] == 0 || !logic_spec(sudoku1,   row,i))) return 0;
+            if(bit(colChanges,i+1) && (sudoku1->possible[i][col] == 0 || !logic_spec(sudoku1,i,  col))) return 0;
+            if(bit(boxChanges,i+1) && (sudoku1->possible[x][y]   == 0 || !logic_spec(sudoku1,x,y))) return 0;
         }
 
     }
@@ -189,10 +212,44 @@ int naked_numbers(sudoku* sudoku1){
     return 1;
 }
 
+int hidden_numbers_spec(sudoku* sudoku1, int row, int col){
+    int value = sudoku1->possible[row][col];
+
+    for(int b = 1; b <= SUDOKU_SIZE; b++){
+        int rowOccurrences = 0;
+        int colOccurrences = 0;
+        int boxOccurrences = 0;
+        int currentOne = set_bit(0, b);
+
+        if(bit(value,b) && currentOne != value){
+
+            count_containing(sudoku1, row, col, currentOne, &rowOccurrences, &colOccurrences, &boxOccurrences);
+
+            if(rowOccurrences < 1) return 0;
+            if(colOccurrences < 1) return 0;
+            if(boxOccurrences < 1) return 0;
+
+            if(rowOccurrences == 1 || colOccurrences == 1 || boxOccurrences == 1){
+                sudoku1->possible[row][col] = currentOne;
+                return logic_spec(sudoku1,row,col);
+            }
+        }
+    }
+    return 1;
+}
+
 
 int place_number(sudoku* s, int number, int row, int column){
     s->possible[row][column] = set_bit(0,number);
-    return naked_numbers_spec(s,row,column);
+    return logic_spec(s,row,column);
+}
+
+int logic_spec(sudoku* sudoku1, int row, int col){
+    int hidden = 1;
+    int naked = 1;
+    hidden = hidden_numbers_spec(sudoku1,row,col);
+    naked = naked_numbers_spec(sudoku1,row,col);
+    return  hidden && naked;
 }
 
 int logic(sudoku* s) {
