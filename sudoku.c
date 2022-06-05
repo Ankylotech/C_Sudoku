@@ -76,6 +76,13 @@ int first_bit(int n){
     return 0;
 }
 
+int last_bit(int n){
+    for(int i = SUDOKU_SIZE; i >= 1; i--){
+        if(bit(n,i)) return i;
+    }
+    return 0;
+}
+
 int finishBoard(sudoku* s){
     int ret = 1;
     int count[SUDOKU_SIZE];
@@ -153,7 +160,7 @@ int naked_numbers_spec(sudoku* sudoku1, int row, int col){
     int value = sudoku1->possible[row][col];
     int count = bit_num(value);
 
-    if(count < SUDOKU_SIZE && count > 0 ){
+    if(count < SUDOKU_SIZE && count > 0){
         int boxX = (row/SUDOKU_N)*SUDOKU_N;
         int boxY = (col/SUDOKU_N)*SUDOKU_N;
 
@@ -210,6 +217,54 @@ int naked_numbers(sudoku* sudoku1){
         }
     }
     return 1;
+}
+
+int hidden_numbers_spec_value(sudoku* sudoku1, int row, int col, int current){
+    int value = sudoku1->possible[row][col];
+    int last = last_bit(current);
+    int bitCount = bit_num(current);
+    int rowOccurrences = 0;
+    int colOccurrences = 0;
+    int boxOccurrences = 0;
+    int boxX = (row/SUDOKU_N)*SUDOKU_N;
+    int boxY = (col/SUDOKU_N)*SUDOKU_N;
+
+    count_containing(sudoku1, row, col, current, &rowOccurrences, &colOccurrences, &boxOccurrences);
+
+    if(rowOccurrences < 1) return 0;
+    if(colOccurrences < 1) return 0;
+    if(boxOccurrences < 1) return 0;
+
+    if (rowOccurrences == bitCount) {
+        sudoku1->possible[row][col] = current;
+        for(int i = 0; i < SUDOKU_SIZE; i++){
+            if(contains(sudoku1->possible[row][i],current)){
+                sudoku1->possible[row][i] = current;
+            }
+        }
+        return logic_spec(sudoku1, row, col);
+    }
+    if (colOccurrences == bitCount) {
+        sudoku1->possible[row][col] = current;
+        for(int i = 0; i < SUDOKU_SIZE; i++){
+            if(contains(sudoku1->possible[i][col],current)){
+                sudoku1->possible[i][col] = current;
+            }
+        }
+        return logic_spec(sudoku1, row, col);
+    }
+    if (boxOccurrences == bitCount) {
+        sudoku1->possible[row][col] = current;
+        for(int i = 0; i < SUDOKU_SIZE; i++){
+            int x = boxX + i%SUDOKU_N;
+            int y = boxY + i/SUDOKU_N;
+            if(contains(sudoku1->possible[x][y],current)){
+                sudoku1->possible[x][y] = current;
+            }
+        }
+        return logic_spec(sudoku1, row, col);
+    }
+
 }
 
 int hidden_numbers_spec(sudoku* sudoku1, int row, int col){
@@ -290,7 +345,7 @@ int branch_bound(sudoku* sudoku1){
 }
 
 int solve_board(sudoku* s){
-    return logic(s) && branch_bound(s);
+    return branch_bound(s);
 }
 
 void output_matrix(int s[SUDOKU_SIZE][SUDOKU_SIZE]){
